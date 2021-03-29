@@ -3,7 +3,9 @@ import random
 
 
 class Cromozom:
-    def __init__(self, fin):
+    def __init__(self, fin, fout):
+        self.debug = True
+        self.fout = fout
         s = fin.readline().split()
         self.nrPopulatie = int(s[-1])
         s = fin.readline().split()
@@ -19,6 +21,7 @@ class Cromozom:
         self.lCromozom = int(log2((self.domain[1] - self.domain[0]) * (10 ** self.precisiton)))
         self.populatie = []
         self.generarePopulatie()
+        self.co = 1
 
     def generarePopulatie(self):
         self.populatie = []
@@ -42,16 +45,30 @@ class Cromozom:
     def fitnessPopulatie(self):
         fit = []
         decod = self.decodificarePopulatie()
-        for i in decod:
-            fit.append(self.function[0] * i * i + self.function[1] * i + self.function[2])
+        if self.debug:
+            self.fout.write("Generation " + str(self.co) + ":\n")
+        co = 0
+        for x in decod:
+            fit.append(self.function[0] * x * x + self.function[1] * x + self.function[2])
+            if self.debug:
+                self.fout.write(str(co) + ". " + str(self.populatie[co]) + " x=" + str(x) + " f=" + str(fit[-1]) + '\n')
+            co += 1
         return (decod, fit)
 
     def probabilitateSelectie(self):
         decod, fit = self.fitnessPopulatie()
         fitnessTotal = sum(fit)
         prob = []
+
+        if self.debug:
+            self.fout.write("\nProbabilitate selectie:\n")
+        co = 0
         for i in fit:
             prob.append(i / fitnessTotal)
+            if self.debug:
+                self.fout.write(str(co) + ". " + str(i))
+            co += 1
+
         return (decod, fit, prob)
 
     def nextGeneration(self):
@@ -62,6 +79,9 @@ class Cromozom:
             # generam intervalul de probabilitati
             for i in range(1, len(prob)):
                 prob[i] += prob[i - 1]
+
+            if self.debug:
+                self.fout.write("Interval: " + str(prob) + '\n')
 
             for i in range(self.nrPopulatie - 1):  # mai luam n-1 cromozomi
                 nr = random.random()  # generam random un nr intre 0 si 1
@@ -77,6 +97,8 @@ class Cromozom:
                     idx += 1
 
                 newPopulation.append(self.populatie[idx])
+                if self.debug:
+                    self.fout.write("u=" + str(nr) + " cromozom:" + str(idx) + '\n')
             return newPopulation
 
         def crossingOver(population):
@@ -84,6 +106,8 @@ class Cromozom:
                 r = random.random()
                 if r < self.pRecombinare:
                     brPoint = random.choice(range(self.lCromozom))
+                    if self.debug:
+                        self.fout.write("BrPoint: " + str(brPoint) + " :->: " + str(crom))
                     aux = [0] * self.lCromozom
                     aux.extend(crom[0][brPoint:])
                     for i in range(1, len(crom)):
@@ -95,8 +119,12 @@ class Cromozom:
                         aux2 = aux[j]
                         aux[j] = crom[i][j]
                         crom[i][j] = aux2
+                    if self.debug:
+                        self.fout.write(' :->: ' + str(crom) + '\n')
                 return crom
 
+            if self.debug:
+                self.fout.write("Cromozomes with recombination:\n")
             newPopulation = [population[0]]  # pe prima poz avem elem maxim care va trece nemodificat in noua generatie
             population[0] = population[-1]
             population.pop()  # deci il scoartem
@@ -119,21 +147,31 @@ class Cromozom:
             return population
 
         intermediatePopulation = selectPopulation()
-        print(intermediatePopulation)
+        if self.debug:
+            self.fout.write("selected population: " + str(intermediatePopulation) + '\n')
         intermediatePopulation = crossingOver(intermediatePopulation)
-        print(intermediatePopulation)
+        if self.debug:
+            self.fout.write("after crossover population: " + str(intermediatePopulation) + '\n')
         intermediatePopulation = mutation(intermediatePopulation)
-        print(intermediatePopulation)
+        if self.debug:
+            self.fout.write("new population: " + str(intermediatePopulation) + '\n')
         self.populatie = intermediatePopulation
+        self.co += 1
 
 
 fin = open("date.in")
-cromozom = Cromozom(fin)
+fout = open("sol.out", "w")
+cromozom = Cromozom(fin, fout)
 s = fin.readline().split()
 nrEtape = int(s[-1])
 
-print(cromozom.populatie)
+# print(cromozom.populatie)
 for i in range(nrEtape):
     cromozom.nextGeneration()
-    print(".....................")
-print(cromozom.fitnessPopulatie())
+    # print(".....................")
+    cromozom.debug = False
+    fout.write("Max number:" + str(max(cromozom.fitnessPopulatie()[1])) + '\n')
+# print(cromozom.fitnessPopulatie())
+
+fin.close()
+fout.close()
