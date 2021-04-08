@@ -19,7 +19,7 @@ class Cromozom:
         s = fin.readline().split()
         self.domain = (int(s[-2]), int(s[-1]))  # domeniul de definite al functiei
         s = fin.readline().split()
-        self.function = (int(s[-3]), int(s[-2]), int(s[-1]))  # coeficientii functiei
+        self.function = (int(s[-4]), int(s[-3]), int(s[-2]), int(s[-1]))  # coeficientii functiei
         s = fin.readline().split()
         self.precisiton = int(s[-1])  # precizia de impartire a intervalului, din care vom calcula lungimea cromozomului
         s = fin.readline().split()
@@ -47,7 +47,7 @@ class Cromozom:
             self.fout.write("Generation " + str(self.co) + ":\n")
         co = 0
         for x in decod:  # pt fiecare x, calculam f(x); functia de fitness e chiar functia data
-            fit.append(self.function[0] * x * x + self.function[1] * x + self.function[2])
+            fit.append(self.function[0] * x * x * x + self.function[1] * x * x + self.function[2] * x + self.function[3])
             if self.debug:
                 self.fout.write(str(co) + ". " + str(self.populatie[co]) + " x=" + str(x) + " f=" + str(fit[-1]) + '\n')
             co += 1
@@ -164,8 +164,8 @@ nrEtape = int(s[-1])
 for i in range(nrEtape):
     cromozom.nextGeneration()
     cromozom.debug = False
-    l = cromozom.fitnessPopulatie()[1]
-    fout.write(str(i + 1) + ". Max number:" + str(max(l)) + "; avg: " + str(sum(l) / len(l)) + '\n')
+    x, l = cromozom.fitnessPopulatie()
+    fout.write(str(i + 1) + ". Max number:" + str(max(l)) + "; avg: " + str(sum(l) / len(l)) + ' x: ' + str(x[l.index(max(l))]) + '\n')
 
 fin.close()
 fout.close()
